@@ -1,6 +1,7 @@
-package upload2dir
+package caddyupload2dir
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"io"
 	"net/http"
@@ -36,6 +37,7 @@ func init() {
 type Upload2dir struct {
 	FileServerRoot string `json:"file_server_root"`
 	FileFieldName  string `json:"file_field_name,omitempty"`
+	AdminPassword  string `json:"admin_password,omitempty"`
 
 	ctx    caddy.Context
 	logger *zap.Logger
@@ -111,6 +113,13 @@ func (u *Upload2dir) CreateDir(w http.ResponseWriter, r *http.Request, next cadd
 }
 
 func (u *Upload2dir) DeleteFile(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
+	if u.AdminPassword != "" && subtle.ConstantTimeCompare(
+		[]byte(r.Header.Get("X-Admin-Password")),
+		[]byte(u.AdminPassword),
+	) != 1 {
+		return caddyhttp.Error(http.StatusForbidden, fmt.Errorf("invalid admin password"))
+	}
+
 	dest := filepath.Join(u.FileServerRoot, r.URL.Path)
 
 	err := os.Remove(dest)
@@ -220,6 +229,10 @@ func (u *Upload2dir) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			switch d.Val() {
 			case "file_field_name":
 				if !d.Args(&u.FileFieldName) {
+					return d.ArgErr()
+				}
+			case "admin_password":
+				if !d.Args(&u.AdminPassword) {
 					return d.ArgErr()
 				}
 			default:

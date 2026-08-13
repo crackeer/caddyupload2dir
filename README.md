@@ -41,7 +41,8 @@ apps.http.servers下的一个配置
                 "handle" : [
                     {
                         "handler" : "upload2dir",
-                        "file_server_root" : "/your/file/dir"
+                        "file_server_root" : "/your/file/dir",
+                        "admin_password" : "replace-with-a-strong-password"
                     }
                 ],
                 "terminal" : true
@@ -64,12 +65,21 @@ apps.http.servers下的一个配置
 ```
 
 
+## 管理员删除密码
+设置可选的 `admin_password` 后，删除文件或空目录时，页面会提示输入管理员密码。密码仅通过 `X-Admin-Password` 请求头提交，插件在服务端校验通过后才执行删除；未配置该项时保留原有的无密码删除行为，以兼容旧配置。
+
+Caddyfile 配置示例：
+
+```caddyfile
+upload2dir {
+    admin_password replace-with-a-strong-password
+}
+```
+
+请仅通过 HTTPS 提供该页面，避免密码在传输中暴露；不要将真实密码提交到版本库。
+
 ## what new filer_server page looks like?
 - Add create directory in current directory、upload file to current directory、delete file or empty directory
 [![pppwtDU.png](https://s1.ax1x.com/2023/02/26/pppwtDU.png)](https://imgse.com/i/pppwtDU)
-
-**attention!!!** 
-you have to set your token which represents your identity that make you have access to the three actions, you can click `set token` at the bottom of the page.
-[![pppwBCR.png](https://s1.ax1x.com/2023/02/26/pppwBCR.png)](https://imgse.com/i/pppwBCR)
 
 
