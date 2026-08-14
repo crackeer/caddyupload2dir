@@ -677,11 +677,6 @@
         timeList.forEach(localizeDatetime);
 
         var deleteFile = async (file) => {
-            let yes = window.confirm("确认删除该文件")
-            if (!yes) {
-                return
-            }
-
             let password = window.prompt("请输入管理员密码", "")
             if (password === null) {
                 return

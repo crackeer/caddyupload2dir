@@ -31,7 +31,8 @@
                             "handle": [
                                 {
                                     "handler": "upload2dir",
-                                    "file_server_root": "/Users/liuhu016"
+                                    "file_server_root": "/Users/liuhu016",
+                                    "admin_password": "123456"
                                 }
                             ],
                             "terminal": true
@@ -42,7 +43,8 @@
                                     "handler": "file_server",
                                     "root": "/Users/liuhu016",
                                     "browse": {
-                                        "template_file": "/Users/liuhu016/github/caddy-upload2dir/template.html"
+                                        "template_file": "template/template.html",
+                                        "sort": ["time", "desc"]
                                     },
                                     "index_names": [
                                         ""

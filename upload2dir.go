@@ -169,19 +169,15 @@ func (u *Upload2dir) PutFile(w http.ResponseWriter, r *http.Request, next caddyh
 	if err := os.MkdirAll(destDir, os.ModePerm); err != nil {
 		return caddyhttp.Error(http.StatusInternalServerError, fmt.Errorf("mkdirall %s error: %s", destDir, err.Error()))
 	}
-
-	if target, err := os.Stat(dest); err == nil && target.Size() > 0 {
-		if err := os.Rename(dest, filepath.Join(destDir, fmt.Sprintf("backup-%d.%s", time.Now().Unix(), fileName))); err != nil {
-			u.logger.Error("FormFile Error",
-				zap.String("requuid", requuid),
-				zap.String("message", "Rename file error"),
-				zap.Error(err),
-				zap.Object("request", caddyhttp.LoggableHTTPRequest{Request: r}))
-			return caddyhttp.Error(http.StatusInternalServerError, err)
-		}
+	dest = filepath.Join(destDir, fileName)
+	if _, err := os.Stat(dest); err == nil {
+		// Preserve the existing file and create a timestamped name for this upload.
+		dest = filepath.Join(destDir, fmt.Sprintf("%s-%d", fileName, time.Now().UnixNano()))
 	}
 
-	tempFile, tmpf_err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0755)
+	// O_EXCL prevents an existing file from being overwritten if another request
+	// creates the same target after the existence check above.
+	tempFile, tmpf_err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 
 	if tmpf_err != nil {
 		u.logger.Error("TempFile Error",
@@ -214,7 +210,7 @@ func (u *Upload2dir) PutFile(w http.ResponseWriter, r *http.Request, next caddyh
 		zap.Any("MIME Header", handler.Header),
 		zap.Object("request", caddyhttp.LoggableHTTPRequest{Request: r}))
 
-	repl.Set("http.upload.filename", handler.Filename)
+	repl.Set("http.upload.filename", filepath.Base(dest))
 	repl.Set("http.upload.filesize", handler.Size)
 
 	w.WriteHeader(http.StatusOK)
