@@ -44,11 +44,12 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          BIN="caddy-linux-${{ matrix.arch }}"
-          mv caddy "$BIN"
-          chmod +x "$BIN"
+          chmod +x caddy
+          # install.sh expects the binary named "caddy" inside the tarball;
+          # keep the arch-named copy as a standalone asset for direct download.
+          cp caddy "caddy-linux-${{ matrix.arch }}"
           tar czf "../caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz" \
-              "$BIN" caddy.json caddy-upload2dir.service install.sh template.html
+              caddy caddy.json caddy-upload2dir.service install.sh template.html
           cd ..
           sha256sum "caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz" \
               > "caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz.sha256"
@@ -60,6 +61,7 @@ jobs:
           path: |
             caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz
             caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz.sha256
+            dist/caddy-linux-${{ matrix.arch }}
 
   release:
     name: Create GitHub Release
