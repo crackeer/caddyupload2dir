@@ -6,6 +6,7 @@ Requires=network-online.target
 
 [Service]
 Type=notify
+Environment=HOME=/root
 ExecStart=/usr/local/caddy/caddy run --config /usr/local/caddy/caddy.json
 ExecReload=/usr/local/caddy/caddy reload --config /usr/local/caddy/caddy.json --force
 WorkingDirectory=/usr/local/caddy
