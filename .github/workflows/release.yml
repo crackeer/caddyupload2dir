@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build linux/${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      # xcaddy itself must run on the runner's native arch, so install it
+      # before GOARCH is switched for the actual build.
+      - name: Install xcaddy
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        run: go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+
+      - name: Build caddy with upload2dir plugin
+        env:
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
+        run: ./build.sh
+
+      - name: Package distribution
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist
+          BIN="caddy-linux-${{ matrix.arch }}"
+          mv caddy "$BIN"
+          chmod +x "$BIN"
+          tar czf "../caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz" \
+              "$BIN" caddy.json caddy-upload2dir.service install.sh template.html
+          cd ..
+          sha256sum "caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz" \
+              > "caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz.sha256"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-linux-${{ matrix.arch }}
+          path: |
+            caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz
+            caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz.sha256
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true

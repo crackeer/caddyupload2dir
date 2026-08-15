@@ -50,6 +50,7 @@ rm -rf "$DIST_DIR"
 mkdir -p "$DIST_DIR"
 
 cp "$SCRIPT_DIR/caddy"                     "$DIST_DIR/caddy"
+cp "$SCRIPT_DIR/template/template.html"    "$DIST_DIR/template.html"
 cp "$SCRIPT_DIR/caddy.json"                "$DIST_DIR/caddy.json"
 cp "$SCRIPT_DIR/caddy-upload2dir.service"  "$DIST_DIR/caddy-upload2dir.service"
 cp "$SCRIPT_DIR/install.sh"                "$DIST_DIR/install.sh"
