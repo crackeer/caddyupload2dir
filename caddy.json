@@ -13,7 +13,7 @@
                 "static": {
                     "idle_timeout": 30000000000,
                     "listen": [
-                        "0.0.0.0:8088"
+                        "0.0.0.0:8080"
                     ],
                     "max_header_bytes": 10240000,
                     "read_header_timeout": 10000000000,
@@ -31,8 +31,8 @@
                             "handle": [
                                 {
                                     "handler": "upload2dir",
-                                    "file_server_root": "/Users/liuhu016",
-                                    "admin_password": "123456"
+                                    "file_server_root": "/",
+                                    "admin_password": "admin"
                                 }
                             ],
                             "terminal": true
@@ -41,9 +41,9 @@
                             "handle": [
                                 {
                                     "handler": "file_server",
-                                    "root": "/Users/liuhu016",
+                                    "root": "/",
                                     "browse": {
-                                        "template_file": "template/template.html",
+                                        "template_file": "/usr/local/caddy/template.html",
                                         "sort": ["time", "desc"]
                                     },
                                     "index_names": [

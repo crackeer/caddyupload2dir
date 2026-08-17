@@ -1,6 +1,6 @@
 [Unit]
 Description=Caddy web server (with upload2dir plugin)
-Documentation=https://github.com/crackeer/caddy-upload2dir
+Documentation=https://github.com/crackeer/caddyupload2dir
 After=network.target network-online.target
 Requires=network-online.target
 
@@ -16,7 +16,6 @@ TimeoutStopSec=5s
 LimitNOFILE=1048576
 LimitNPROC=512
 PrivateTmp=true
-ProtectSystem=full
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 
 [Install]

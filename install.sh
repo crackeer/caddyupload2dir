@@ -4,19 +4,19 @@
 #
 # This script:
 #   1. Copies the caddy binary and template.html to /usr/local/caddy/
-#   2. Copies caddy.json (config) to /usr/local/caddy/ if not already present
+#   2. Backs up and installs caddy.json under /usr/local/caddy/
 #   3. Installs the systemd service unit file
 #   4. Enables and starts the service via systemctl
 #
 # Run from the directory that contains caddy, template.html, caddy.json and
-# caddy-upload2dir.service (i.e. the dist/ directory produced by build.sh):
+# caddyupload2dir.service (i.e. the dist/ directory produced by build.sh):
 #
 #   sudo ./install.sh
 #
 set -euo pipefail
 
 INSTALL_DIR="/usr/local/caddy"
-SERVICE_NAME="caddy-upload2dir.service"
+SERVICE_NAME="caddyupload2dir.service"
 SERVICE_DEST="/etc/systemd/system/${SERVICE_NAME}"
 
 # Directory of this script (source of the files to install).
@@ -28,13 +28,6 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# Verify required files exist next to this script.
-for f in caddy template.html "$SERVICE_NAME"; do
-    if [ ! -f "$SRC_DIR/$f" ]; then
-        echo "Error: required file '$f' not found in $SRC_DIR" >&2
-        exit 1
-    fi
-done
 
 echo ">> Creating install directory: $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
@@ -42,19 +35,28 @@ mkdir -p "$INSTALL_DIR"
 echo ">> Installing caddy binary -> $INSTALL_DIR/caddy"
 install -m 0755 "$SRC_DIR/caddy" "$INSTALL_DIR/caddy"
 
-echo ">> Installing template.html -> $INSTALL_DIR/template.html"
+echo ">> Installing browse template -> $INSTALL_DIR/template.html"
 install -m 0644 "$SRC_DIR/template.html" "$INSTALL_DIR/template.html"
 
-# Install the config only if it does not already exist, so we don't clobber
-# a configuration the operator has customized on the target machine.
-if [ -f "$SRC_DIR/caddy.json" ]; then
-    if [ -f "$INSTALL_DIR/caddy.json" ]; then
-        echo ">> Existing config found, leaving $INSTALL_DIR/caddy.json untouched"
-    else
-        echo ">> Installing caddy.json -> $INSTALL_DIR/caddy.json"
-        install -m 0644 "$SRC_DIR/caddy.json" "$INSTALL_DIR/caddy.json"
-    fi
+# Install the packaged configuration on every deployment so changes to the
+# root, port and handlers actually take effect. Preserve the previous config
+# as a timestamped backup for rollback.
+if [ ! -f "$SRC_DIR/caddy.json" ]; then
+    echo "Error: required file 'caddy.json' not found in $SRC_DIR" >&2
+    exit 1
 fi
+
+if [ -f "$INSTALL_DIR/caddy.json" ]; then
+    CONFIG_BACKUP="$INSTALL_DIR/caddy.json.bak.$(date +%Y%m%d%H%M%S)"
+    echo ">> Backing up existing config -> $CONFIG_BACKUP"
+    cp -p "$INSTALL_DIR/caddy.json" "$CONFIG_BACKUP"
+fi
+
+echo ">> Installing caddy.json -> $INSTALL_DIR/caddy.json"
+install -m 0644 "$SRC_DIR/caddy.json" "$INSTALL_DIR/caddy.json"
+
+# Validate the exact installed configuration before restarting the service.
+"$INSTALL_DIR/caddy" validate --config "$INSTALL_DIR/caddy.json"
 
 echo ">> Installing systemd unit -> $SERVICE_DEST"
 install -m 0644 "$SRC_DIR/$SERVICE_NAME" "$SERVICE_DEST"

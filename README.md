@@ -1,25 +1,25 @@
 # Requirement
 - [Go Installed](https://golang.org/doc/install)
 
-# Usage
+# Development
 refer to [Extending Caddy](https://caddyserver.com/docs/extending-caddy)
 
-## 1. **Install [xcaddy](https://github.com/caddyserver/xcaddy)**
+## 1. Install [xcaddy](https://github.com/caddyserver/xcaddy)
 
 ```sh
 go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
 ```
 
-## 2. Development
+## 2. build caddy with plugin caddyupload2dir
 
-- build release version
-```sh
-xcaddy build master --with github.com/crackeer/caddyupload2dir --embed template:./template
-```
-
-- build debug version
 ```sh
 xcaddy build master --with github.com/crackeer/caddyupload2dir=./ --embed template:./template --debug
+```
+
+## 3. run caddy with plugin caddyupload2dir
+
+```sh
+./caddy -config caddy.json
 ```
 
 # Example:caddy.json
@@ -81,42 +81,45 @@ upload2dir {
 请仅通过 HTTPS 提供该页面，避免密码在传输中暴露；不要将真实密码提交到版本库。
 
 ## what new filer_server page looks like?
-- Add create directory in current directory、upload file to current directory、delete file or empty directory
+- Add create directory in current directory、upload file to current directory、delete file or directory
 - Uploading a file with an existing name preserves the existing file and stores the upload as `{FILE_NAME}-{timestamp}`.
 
 [![pppwtDU.png](https://s1.ax1x.com/2023/02/26/pppwtDU.png)](https://imgse.com/i/pppwtDU)
 
 ## Build & Install as a systemd service
 
-`build.sh` compiles a caddy binary that bundles this local plugin and assembles an
-installable package under `dist/`:
+`build.sh` compiles a caddy binary that bundles this local plugin and creates
+`caddyupload2dir.zip`. The archive extracts into a single top-level
+`caddyupload2dir/` directory:
 
 ```sh
 ./build.sh            # build against caddy master
 ./build.sh v2.6.4     # or a specific caddy version
 ```
 
-The `dist/` directory contains `caddy`, `template.html`, `caddy.json`,
-`caddy-upload2dir.service` and `install.sh`. Copy that directory to the target Linux
-machine (with systemd) and run:
+The extracted directory contains `caddy`, `template.html`, `caddy.json`,
+`caddyupload2dir.service` and `install.sh`. Copy it to the target Linux machine
+(with systemd) and run:
 
 ```sh
 sudo ./install.sh
 ```
 
-`install.sh` copies the `caddy` binary and `template.html` into `/usr/local/caddy/`,
-installs `caddy.json` there (only when a config is not already present), installs the
-`caddy-upload2dir.service` unit into `/etc/systemd/system/`, then reloads systemd and
-enables + starts the service.
+`install.sh` copies the `caddy` binary, `template.html`, and `caddy.json` into
+`/usr/local/caddy/`. If a configuration already exists, it is saved as a timestamped
+`caddy.json.bak.*` file before replacement. The installer validates the installed
+configuration, installs `caddyupload2dir.service` under `/etc/systemd/system/`, then
+reloads systemd and enables + restarts the service.
 
 Useful commands after install:
 
 ```sh
-systemctl status caddy-upload2dir.service
-journalctl -u caddy-upload2dir.service -f
+systemctl status caddyupload2dir.service
+journalctl -u caddyupload2dir.service -f
 ```
 
-> Note: the shipped `caddy.json` uses development paths. Before installing, set
-> `file_server_root` to the directory you want to serve and point
-> `browse.template_file` at `/usr/local/caddy/template.html`. Set a strong
-> `admin_password` before exposing the service beyond a trusted network.
+> The packaged configuration listens on port `8080`, serves root `/`, reads the browse
+> template from `/usr/local/caddy/template.html`, and uses the default delete password
+> `admin`. Change `file_server_root`, `root`, and `admin_password` before exposing the
+> service beyond a trusted network. Serving `/` and running the service as root provides
+> broad filesystem access.

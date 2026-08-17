@@ -43,24 +43,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cd dist
+          cd dist/caddyupload2dir
           chmod +x caddy
           # install.sh expects the binary named "caddy" inside the tarball;
           # keep the arch-named copy as a standalone asset for direct download.
           cp caddy "caddy-linux-${{ matrix.arch }}"
-          tar czf "../caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz" \
-              caddy caddy.json caddy-upload2dir.service install.sh template.html
+          tar czf "../caddyupload2dir-linux-${{ matrix.arch }}.tar.gz" \
+              caddy caddy.json caddyupload2dir.service install.sh template.html
           cd ..
-          sha256sum "caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz" \
-              > "caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz.sha256"
+          sha256sum "caddyupload2dir-linux-${{ matrix.arch }}.tar.gz" \
+              > "caddyupload2dir-linux-${{ matrix.arch }}.tar.gz.sha256"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-linux-${{ matrix.arch }}
           path: |
-            caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz
-            caddy-upload2dir-linux-${{ matrix.arch }}.tar.gz.sha256
+            caddyupload2dir-linux-${{ matrix.arch }}.tar.gz
+            caddyupload2dir-linux-${{ matrix.arch }}.tar.gz.sha256
             dist/caddy-linux-${{ matrix.arch }}
 
   release:

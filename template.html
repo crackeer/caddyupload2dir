@@ -212,6 +212,183 @@
             background-color: #999;
             opacity: 0.5;
         }
+
+        /* Upload progress overlay — same flat, neutral tone as existing .loading */
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #999;
+            opacity: 0.95;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .progress-modal {
+            background: #ffffff;
+            opacity: 1;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #9c9c9c;
+        }
+        .progress-title {
+            font-size: 20px;
+            font-weight: normal;
+            color: #000;
+            background-color: #f2f2f2;
+            padding: 15px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #9c9c9c;
+            white-space: nowrap;
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+        }
+        .progress-title > span:first-child { flex-shrink: 0; }
+        .progress-summary {
+            font-size: 12px;
+            font-family: Verdana, sans-serif;
+            color: #000;
+            padding: 10px 5%;
+            border-bottom: 1px solid #9c9c9c;
+        }
+        .progress-list {
+            overflow-y: auto;
+            flex: 1;
+            padding: 0 5%;
+            background: #ffffff;
+        }
+        .progress-item {
+            border-bottom: 1px dashed #dadada;
+            padding: 10px 0;
+        }
+        .progress-item:last-child {
+            border-bottom: none;
+        }
+        .progress-item.done {
+            background-color: #ffffec;
+        }
+        .progress-item.error {
+            background-color: #fff5f5;
+        }
+        .progress-file-name {
+            font-size: 14px;
+            color: #000;
+            word-break: break-all;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .progress-file-name > span:first-child {
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+        .progress-file-name .status-icon {
+            font-size: 12px;
+            font-family: Verdana, sans-serif;
+            flex-shrink: 0;
+        }
+        .status-icon.uploading { color: #006ed3; }
+        .status-icon.done      { color: #228b22; }
+        .status-icon.error     { color: #b22222; }
+        .progress-bar-wrap {
+            width: 100%;
+            height: 6px;
+            background-color: #f2f2f2;
+            overflow: hidden;
+            border: 1px solid #ccc;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #006ed3;
+        }
+        .progress-item.done .progress-bar-fill { background-color: #228b22; }
+        .progress-item.error .progress-bar-fill { background-color: #b22222; }
+        .progress-meta {
+            margin-top: 6px;
+            font-size: 12px;
+            font-family: Verdana, sans-serif;
+            color: #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .progress-meta .percent { color: #000; }
+        .progress-item.error .progress-meta .error-msg { color: #b22222; }
+        .progress-close {
+            padding: 10px 5%;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid #9c9c9c;
+            background-color: #f2f2f2;
+        }
+        .progress-close button {
+            padding: 2px 8px;
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .progress-close button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        @media (prefers-color-scheme: dark) {
+            .progress-modal {
+                background: #151515;
+                color: #dddddd;
+                border-color: #212121;
+            }
+            .progress-title {
+                background: #151515;
+                color: #dddddd;
+                border-color: #212121;
+            }
+            .progress-summary {
+                color: #dddddd;
+                border-color: #212121;
+                background: #151515;
+            }
+            .progress-list {
+                background: #101010;
+            }
+            .progress-item {
+                border-color: rgba(255, 255, 255, 0.12);
+            }
+            .progress-item.done {
+                background-color: #252525;
+            }
+            .progress-item.error {
+                background-color: #2a1818;
+            }
+            .progress-file-name { color: #dddddd; }
+            .progress-bar-wrap {
+                background-color: #151515;
+                border-color: #212121;
+            }
+            .progress-meta { color: #dddddd; }
+            .progress-meta .percent { color: #dddddd; }
+            .status-icon.uploading { color: #5796d1; }
+            .status-icon.done      { color: #4ade80; }
+            .status-icon.error     { color: #f87171; }
+            .progress-item.error .progress-meta .error-msg { color: #f87171; }
+            .progress-close {
+                border-color: #212121;
+                background: #151515;
+            }
+        }
         @media (max-width: 600px) {
             .hideable {
                 display: none;
@@ -459,6 +636,21 @@
                     </svg>
                 </div>
             </div>
+
+            <!-- Upload progress modal -->
+            <div id="progress-overlay" class="progress-overlay" style="display: none;">
+                <div class="progress-modal">
+                    <div class="progress-title">
+                        <span>上传进度</span>
+                        <span id="progress-status-text" style="font-size:12px;font-weight:normal;color:#6b7280;">准备中...</span>
+                    </div>
+                    <div class="progress-summary" id="progress-summary"></div>
+                    <div class="progress-list" id="progress-list"></div>
+                    <div class="progress-close">
+                        <button id="progress-close-btn" class="primary" disabled>关闭</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="listing">
             <table aria-describedby="summary">
@@ -596,7 +788,7 @@
     </main>
     <footer>
         Served with <a rel="noopener noreferrer" href="https://caddyserver.com" target="_blank"> Caddy</a>｜
-        <a  rel="noopener noreferrer" href="https://github.com/crackeer/caddy-upload2dir" target="_blank">With Plugin caddy-upload2dir</a>
+        <a  rel="noopener noreferrer" href="https://github.com/crackeer/caddyupload2dir" target="_blank">With Plugin caddyupload2dir</a>
     </footer>
     <script>
         var filterEl = document.getElementById('filter');
@@ -629,35 +821,302 @@
                 }
             });
         }
-        const fileUploader = document.getElementById('uploader');
 
-        fileUploader.addEventListener('change', async (event) => {
-            document.getElementById("loading").style.display = 'block';
-            document.getElementById("loading").className = 'loading';
-            const files = event.target.files;
-            for (const file of files) {
-                try {
-                    let result = await doUploadFile(file)
-                    if (result.status != 200) {
-                        alert(result.statusText)
-                    }
+        // Build an action URL rooted at the current browse directory.
+        // We must use pathname (not href) so that any existing query params
+        // (e.g. ?sort=name&order=asc) are not accidentally concatenated
+        // with the target name.
+        function buildDirActionUrl(name) {
+            var pathname = window.location.pathname.replace(/\/?$/, '/');
+            return window.location.origin + pathname + encodeURIComponent(name);
+        }
 
-                } catch (e) {
-                    alert(e.message)
+        // ---------- Upload progress helpers ----------
+        const ONE_KB = 1024;
+        const ONE_MB = 1024 * 1024;
+        const ONE_GB = 1024 * 1024 * 1024;
+
+        function formatBytes(n) {
+            if (n == null || isNaN(n) || n < 0) return '-';
+            if (n >= ONE_GB) return (n / ONE_GB).toFixed(2) + ' GB';
+            if (n >= ONE_MB) return (n / ONE_MB).toFixed(2) + ' MB';
+            if (n >= ONE_KB) return (n / ONE_KB).toFixed(1) + ' KB';
+            return n + ' B';
+        }
+
+        function formatSeconds(s) {
+            s = Math.max(0, Math.floor(s));
+            if (s < 60) return s + ' 秒';
+            const m = Math.floor(s / 60);
+            const r = s % 60;
+            if (m < 60) return m + ' 分 ' + r + ' 秒';
+            const h = Math.floor(m / 60);
+            const rm = m % 60;
+            return h + ' 时 ' + rm + ' 分';
+        }
+
+        const progressState = {
+            totalFiles: 0,
+            finishedFiles: 0,
+            erroredFiles: 0,
+            totalBytes: 0,
+            loadedBytes: 0,
+            allSettled: false,
+        };
+
+        function resetProgressState(totalFiles, totalBytes) {
+            progressState.totalFiles = totalFiles;
+            progressState.finishedFiles = 0;
+            progressState.erroredFiles = 0;
+            progressState.totalBytes = totalBytes;
+            progressState.loadedBytes = 0;
+            progressState.allSettled = false;
+        }
+
+        function updateSummary() {
+            const s = progressState;
+            const pending = s.totalFiles - s.finishedFiles - s.erroredFiles;
+            const ratio = s.totalBytes > 0 ? s.loadedBytes / s.totalBytes : 0;
+            const pct = (ratio * 100).toFixed(1);
+            const txt =
+                '共 ' + s.totalFiles + ' 个文件，成功 ' + s.finishedFiles + '，失败 ' + s.erroredFiles +
+                '，进行中 ' + pending + '。总大小 ' + formatBytes(s.totalBytes) +
+                '，已传 ' + formatBytes(s.loadedBytes) + '（' + pct + '%）';
+            const summary = document.getElementById('progress-summary');
+            if (summary) summary.textContent = txt;
+
+            const statusTxt = document.getElementById('progress-status-text');
+            if (statusTxt) {
+                if (s.allSettled) {
+                    statusTxt.textContent = s.erroredFiles === 0 ? '全部完成 ✓' : '完成（存在失败）';
+                    statusTxt.style.color = s.erroredFiles === 0 ? '#16a34a' : '#dc2626';
+                } else {
+                    statusTxt.textContent = '上传中 ' + pct + '%';
+                    statusTxt.style.color = '';
                 }
             }
-            window.location.reload()
-        });
 
-        async function doUploadFile(file) {
-            var url = window.location.href + file.name
-            const formData = new FormData()
-            formData.append('file', file)
-            return await fetch(url, {
-                method: 'PUT',
-                body: formData
-            })
+            const closeBtn = document.getElementById('progress-close-btn');
+            if (closeBtn) closeBtn.disabled = !s.allSettled;
         }
+
+        function showProgressModal() {
+            const overlay = document.getElementById('progress-overlay');
+            overlay.style.display = 'flex';
+            const closeBtn = document.getElementById('progress-close-btn');
+            closeBtn.onclick = function () {
+                overlay.style.display = 'none';
+                // Only refresh when everything settled and there were uploads to do
+                if (progressState.allSettled && progressState.totalFiles > 0) {
+                    window.location.reload();
+                }
+            };
+        }
+
+        function createProgressItem(file) {
+            const list = document.getElementById('progress-list');
+            const item = document.createElement('div');
+            item.className = 'progress-item';
+            item.id = 'p-item-' + file.__id;
+
+            const nameLine = document.createElement('div');
+            nameLine.className = 'progress-file-name';
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = file.name;
+            nameSpan.title = file.name;
+            const statusIcon = document.createElement('span');
+            statusIcon.className = 'status-icon uploading';
+            statusIcon.textContent = '上传中';
+            statusIcon.id = 'p-status-' + file.__id;
+            nameLine.appendChild(nameSpan);
+            nameLine.appendChild(statusIcon);
+
+            const barWrap = document.createElement('div');
+            barWrap.className = 'progress-bar-wrap';
+            const barFill = document.createElement('div');
+            barFill.className = 'progress-bar-fill';
+            barFill.id = 'p-bar-' + file.__id;
+            barWrap.appendChild(barFill);
+
+            const meta = document.createElement('div');
+            meta.className = 'progress-meta';
+            const percent = document.createElement('span');
+            percent.className = 'percent';
+            percent.id = 'p-pct-' + file.__id;
+            percent.textContent = '0%';
+            const detail = document.createElement('span');
+            detail.id = 'p-detail-' + file.__id;
+            detail.textContent = '0 B / ' + formatBytes(file.size) + ' · ' + formatBytes(0) + '/s';
+            meta.appendChild(percent);
+            meta.appendChild(detail);
+
+            item.appendChild(nameLine);
+            item.appendChild(barWrap);
+            item.appendChild(meta);
+            list.appendChild(item);
+        }
+
+        function updateProgressItem(file, loaded, total, startTime) {
+            const id = file.__id;
+            const totalSafe = total > 0 ? total : (file.size || 0);
+            const ratio = totalSafe > 0 ? loaded / totalSafe : 0;
+            const pct = (ratio * 100).toFixed(1);
+
+            const bar = document.getElementById('p-bar-' + id);
+            if (bar) bar.style.width = Math.min(100, Math.max(0, pct - 0)) + '%';
+            const pctEl = document.getElementById('p-pct-' + id);
+            if (pctEl) pctEl.textContent = pct + '%';
+
+            const elapsedSec = (Date.now() - startTime) / 1000;
+            const speed = elapsedSec > 0 ? loaded / elapsedSec : 0;
+            const remaining = speed > 0 && totalSafe > loaded ? (totalSafe - loaded) / speed : 0;
+            const detail = document.getElementById('p-detail-' + id);
+            if (detail) {
+                detail.textContent =
+                    formatBytes(loaded) + ' / ' + formatBytes(totalSafe) +
+                    ' · ' + formatBytes(speed) + '/s' +
+                    (remaining > 0 ? ' · 剩余 ' + formatSeconds(remaining) : '');
+            }
+        }
+
+        function markProgressItem(file, status, errorMsg) {
+            const id = file.__id;
+            const item = document.getElementById('p-item-' + id);
+            const statusIcon = document.getElementById('p-status-' + id);
+            const bar = document.getElementById('p-bar-' + id);
+            const detail = document.getElementById('p-detail-' + id);
+            const pctEl = document.getElementById('p-pct-' + id);
+
+            if (!item) return;
+
+            item.classList.remove('done', 'error');
+            statusIcon.classList.remove('uploading', 'done', 'error');
+
+            if (status === 'done') {
+                item.classList.add('done');
+                statusIcon.classList.add('done');
+                statusIcon.textContent = '成功';
+                if (bar) bar.style.width = '100%';
+                if (pctEl) pctEl.textContent = '100%';
+                if (detail) detail.textContent = '已完成 · ' + formatBytes(file.size);
+            } else if (status === 'error') {
+                item.classList.add('error');
+                statusIcon.classList.add('error');
+                statusIcon.textContent = '失败';
+                if (detail) {
+                    detail.innerHTML = '<span class="error-msg">' + (errorMsg || '上传失败') + '</span>';
+                }
+            }
+        }
+
+        function doUploadFile(file) {
+            return new Promise(function (resolve, reject) {
+                const url = buildDirActionUrl(file.name);
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const xhr = new XMLHttpRequest();
+                const startTime = Date.now();
+
+                xhr.open('PUT', url, true);
+
+                xhr.upload.onprogress = function (e) {
+                    if (e.lengthComputable) {
+                        updateProgressItem(file, e.loaded, e.total, startTime);
+                        // Aggregate estimate: bump global loaded by the delta
+                        if (file.__prevLoaded != null) {
+                            progressState.loadedBytes += (e.loaded - file.__prevLoaded);
+                        } else {
+                            progressState.loadedBytes += e.loaded;
+                        }
+                        file.__prevLoaded = e.loaded;
+                        updateSummary();
+                    }
+                };
+
+                xhr.onload = function () {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        // Ensure progress bar shows 100% on success
+                        if (file.__prevLoaded != null && file.size > file.__prevLoaded) {
+                            progressState.loadedBytes += (file.size - file.__prevLoaded);
+                        }
+                        progressState.finishedFiles += 1;
+                        markProgressItem(file, 'done');
+                        updateSummary();
+                        resolve({ status: xhr.status, statusText: xhr.statusText });
+                    } else {
+                        progressState.erroredFiles += 1;
+                        markProgressItem(file, 'error', 'HTTP ' + xhr.status + ' ' + xhr.statusText);
+                        updateSummary();
+                        resolve({ status: xhr.status, statusText: xhr.statusText });
+                    }
+                };
+
+                xhr.onerror = function () {
+                    progressState.erroredFiles += 1;
+                    markProgressItem(file, 'error', '网络错误');
+                    updateSummary();
+                    reject(new Error('网络错误'));
+                };
+
+                xhr.ontimeout = function () {
+                    progressState.erroredFiles += 1;
+                    markProgressItem(file, 'error', '请求超时');
+                    updateSummary();
+                    reject(new Error('请求超时'));
+                };
+
+                xhr.onabort = function () {
+                    progressState.erroredFiles += 1;
+                    markProgressItem(file, 'error', '已取消');
+                    updateSummary();
+                    reject(new Error('已取消'));
+                };
+
+                try {
+                    xhr.send(formData);
+                } catch (e) {
+                    progressState.erroredFiles += 1;
+                    markProgressItem(file, 'error', e.message || '请求失败');
+                    updateSummary();
+                    reject(e);
+                }
+            });
+        }
+
+        const fileUploader = document.getElementById('uploader');
+
+        fileUploader.addEventListener('change', async function (event) {
+            const files = Array.from(event.target.files || []);
+            if (files.length === 0) return;
+
+            // Reset file input so selecting the same file again still triggers change
+            fileUploader.value = '';
+
+            // Assign stable ids
+            files.forEach(function (f, i) { f.__id = i + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8); f.__prevLoaded = 0; });
+
+            const totalBytes = files.reduce(function (acc, f) { return acc + (f.size || 0); }, 0);
+            resetProgressState(files.length, totalBytes);
+
+            document.getElementById('progress-list').innerHTML = '';
+            files.forEach(createProgressItem);
+            updateSummary();
+            showProgressModal();
+
+            // Upload sequentially to preserve prior behavior and be kind to servers.
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                try {
+                    await doUploadFile(file);
+                } catch (e) {
+                    // Already surfaced in UI via markProgressItem. Keep going with remaining files.
+                }
+            }
+
+            progressState.allSettled = true;
+            updateSummary();
+        });
 
 
         function localizeDatetime(e, index, ar) {
@@ -683,7 +1142,7 @@
             }
 
             try {
-                let result = await fetch(window.location.href + file, {
+                let result = await fetch(buildDirActionUrl(file), {
                     method: 'DELETE',
                     headers: {
                         'X-Admin-Password': password
@@ -705,15 +1164,16 @@
 
         var createDir = async () => {
             let name = window.prompt("请输入文件夹名称", "")
-            if (name.trim().length < 1) {
+            if (name === null || name.trim().length < 1) {
                 return
             }
             try {
-                let result = await fetch(window.location.href + name.trim(), {
+                let result = await fetch(buildDirActionUrl(name.trim()), {
                     method: 'POST'
                 })
-                if (result.status != 200) {
-                    alert(result.statusText)
+                if (!result.ok) {
+                    let message = await result.text()
+                    alert(message || result.statusText)
                 } else {
                     window.location.reload()
                 }

@@ -100,16 +100,32 @@ func (u Upload2dir) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddy
 func (u *Upload2dir) CreateDir(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 	dest := filepath.Join(u.FileServerRoot, r.URL.Path)
 
-	if dir, err := os.Stat(dest); err == nil && dir.IsDir() {
-		return caddyhttp.Error(http.StatusInternalServerError, fmt.Errorf("dir %s exists", dest))
-	} else {
-		if err := os.MkdirAll(dest, os.ModePerm); err != nil {
-			return caddyhttp.Error(http.StatusInternalServerError, fmt.Errorf("mkdir %s error: %s", dest, err.Error()))
+	info, err := os.Stat(dest)
+	if err == nil {
+		if !info.IsDir() {
+			return caddyhttp.Error(http.StatusConflict, fmt.Errorf("%s exists and is not a directory", dest))
 		}
+
+		// Creating an existing directory is idempotent.
+		w.WriteHeader(http.StatusOK)
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return caddyhttp.Error(http.StatusInternalServerError, fmt.Errorf("stat %s error: %s", dest, err.Error()))
 	}
 
-	return next.ServeHTTP(w, r)
+	if err := os.MkdirAll(dest, 0755); err != nil {
+		return caddyhttp.Error(http.StatusInternalServerError, fmt.Errorf("mkdir %s error: %s", dest, err.Error()))
+	}
 
+	info, err = os.Stat(dest)
+	if err != nil || !info.IsDir() {
+		return caddyhttp.Error(http.StatusInternalServerError, fmt.Errorf("directory %s was not created", dest))
+	}
+
+	u.logger.Info("directory created", zap.String("path", dest))
+	w.WriteHeader(http.StatusOK)
+	return nil
 }
 
 func (u *Upload2dir) DeleteFile(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
@@ -122,7 +138,9 @@ func (u *Upload2dir) DeleteFile(w http.ResponseWriter, r *http.Request, next cad
 
 	dest := filepath.Join(u.FileServerRoot, r.URL.Path)
 
-	err := os.Remove(dest)
+	// RemoveAll handles both files and directories (including non-empty ones);
+	// os.Remove only removes empty directories and would fail with "directory not empty".
+	err := os.RemoveAll(dest)
 	if err != nil {
 		return caddyhttp.Error(http.StatusInternalServerError, fmt.Errorf("delete %s error: %s", dest, err.Error()))
 	}
