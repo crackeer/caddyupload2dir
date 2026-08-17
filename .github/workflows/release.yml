@@ -48,9 +48,9 @@ jobs:
           # install.sh expects the binary named "caddy" inside the tarball;
           # keep the arch-named copy as a standalone asset for direct download.
           cp caddy "caddy-linux-${{ matrix.arch }}"
-          tar czf "../caddyupload2dir-linux-${{ matrix.arch }}.tar.gz" \
+          tar czf "../../caddyupload2dir-linux-${{ matrix.arch }}.tar.gz" \
               caddy caddy.json caddyupload2dir.service install.sh template.html
-          cd ..
+          cd ../..
           sha256sum "caddyupload2dir-linux-${{ matrix.arch }}.tar.gz" \
               > "caddyupload2dir-linux-${{ matrix.arch }}.tar.gz.sha256"
 
@@ -61,7 +61,7 @@ jobs:
           path: |
             caddyupload2dir-linux-${{ matrix.arch }}.tar.gz
             caddyupload2dir-linux-${{ matrix.arch }}.tar.gz.sha256
-            dist/caddy-linux-${{ matrix.arch }}
+            dist/caddyupload2dir/caddy-linux-${{ matrix.arch }}
 
   release:
     name: Create GitHub Release
